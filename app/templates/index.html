@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Trends</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        ul {
+            list-style-type: disc;
+            margin: 10px 0 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Twitter Trends</h1>
+    <button id="run-script">Click here to run the script</button>
+    <div id="results" class="results" style="display: none;">
+        <h2>These are the most happening topics as on <span id="datetime"></span></h2>
+        <ul id="trends-list"></ul>
+        <p>The IP address used for this query was <span id="ip-address"></span>.</p>
+        <h3>Here’s a JSON extract of this record from the MongoDB:</h3>
+        <pre id="json-data" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;"></pre>
+        <button id="run-again">Click here to run the query again</button>
+    </div>
+
+    <script>
+        document.getElementById('run-script').addEventListener('click', function() {
+            fetch('/run-script')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Error: ${data.error}`);
+                        return;
+                    }
+
+                    const [uniqueId, trends, ipAddress] = data;
+                    const datetime = new Date().toLocaleString();
+
+                    // Display results
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('datetime').textContent = datetime;
+                    document.getElementById('ip-address').textContent = ipAddress;
+
+                    // Populate trends list
+                    const trendsList = document.getElementById('trends-list');
+                    trendsList.innerHTML = '';
+                    trends.forEach(trend => {
+                        const li = document.createElement('li');
+                        li.textContent = trend;
+                        trendsList.appendChild(li);
+                    });
+
+                    // Populate JSON data
+                    const jsonData = {
+                        _id: uniqueId,
+                        trends: trends,
+                        ip_address: ipAddress,
+                        date_time: datetime
+                    };
+                    document.getElementById('json-data').textContent = JSON.stringify(jsonData, null, 2);
+                })
+                .catch(error => {
+                    alert(`An error occurred: ${error}`);
+                });
+        });
+
+        // Reload the script when "Run Again" is clicked
+        document.getElementById('run-again').addEventListener('click', function() {
+            document.getElementById('run-script').click();
+        });
+    </script>
+</body>
+</html>
